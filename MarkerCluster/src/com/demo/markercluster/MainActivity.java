@@ -20,6 +20,7 @@ import com.amap.api.maps.AMap.OnCameraChangeListener;
 import com.amap.api.maps.AMap.OnMapLoadedListener;
 import com.amap.api.maps.AMap.OnMarkerClickListener;
 import com.amap.api.maps.LocationSource;
+import com.amap.api.maps.MapView;
 import com.amap.api.maps.Projection;
 import com.amap.api.maps.SupportMapFragment;
 import com.amap.api.maps.UiSettings;
@@ -29,6 +30,7 @@ import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.model.MyMarkerCluster;
+import com.model.Person;
 
 public class MainActivity extends FragmentActivity implements
 		OnCameraChangeListener, LocationSource, AMapLocationListener,
@@ -37,6 +39,7 @@ public class MainActivity extends FragmentActivity implements
 	private String TAG = MainActivity.class.getName().toString();
 
 	private AMap aMap;
+	private MapView mapView;
 	private UiSettings mUiSettings;
 	private ArrayList<MarkerOptions> markerOptionsList = new ArrayList<MarkerOptions>();// 所有的marker
 	private ArrayList<MarkerOptions> markerOptionsListInView = new ArrayList<MarkerOptions>();// 视野内的marker
@@ -53,7 +56,8 @@ public class MainActivity extends FragmentActivity implements
 
 	private ArrayList<Marker> markers;
 
-	List<HashMap<String, String>> mapList = null;
+	List<HashMap<String, Person>> mapList = null;
+	private HashMap<String, Person> myHasMap = new HashMap<String, Person>();
 
 	Handler timeHandler = new Handler() {
 		@Override
@@ -72,13 +76,17 @@ public class MainActivity extends FragmentActivity implements
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		mapView = (MapView) findViewById(R.id.map);
+		mapView.onCreate(savedInstanceState);// 此方法必须重写
+
 		DisplayMetrics dm = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(dm);
 		width = dm.widthPixels;
 		height = dm.heightPixels;
 		markers = new ArrayList<Marker>();
 
-		mapList = new ArrayList<HashMap<String, String>>();
+		mapList = new ArrayList<HashMap<String, Person>>();
 
 		init();
 
@@ -89,8 +97,7 @@ public class MainActivity extends FragmentActivity implements
 	 */
 	private void init() {
 		if (aMap == null) {
-			aMap = ((SupportMapFragment) getSupportFragmentManager()
-					.findFragmentById(R.id.map)).getMap();
+			aMap = mapView.getMap();
 			setUpMap();
 			mUiSettings = aMap.getUiSettings();
 			mUiSettings.setTiltGesturesEnabled(false);// 禁用倾斜手势。
@@ -122,9 +129,14 @@ public class MainActivity extends FragmentActivity implements
 	 * 模拟添加多个marker
 	 */
 	private void addMarkers() {
+		myHasMap.clear();
 		for (int i = 0; i < 200; i++) {
-			HashMap<String, String> maHashMap = new HashMap<String, String>();
-			maHashMap.put("Marker", "Marker" + i);
+			HashMap<String, Person> maHashMap = new HashMap<String, Person>();
+
+			Person person = new Person("gxw" + i, i);
+			maHashMap.put("Marker" + i, person);
+
+			// myHasMap.put("Marker" + i, person);
 			LatLng latLng = new LatLng(Math.random() * 6 + 35,
 					Math.random() * 6 + 112);
 			markerOptionsList.add(new MarkerOptions()
@@ -132,6 +144,9 @@ public class MainActivity extends FragmentActivity implements
 					.title("Marker" + i)
 					.icon(BitmapDescriptorFactory
 							.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+			myHasMap.put("Marker" + i, person);
+
 			mapList.add(maHashMap);
 		}
 	}
@@ -309,14 +324,23 @@ public class MainActivity extends FragmentActivity implements
 			do {
 				do {
 					do {
-						Log.i("点击图钉", marker.getTitle());
+						Log.i(TAG, " ----------1-------- " + marker.getTitle());
 						if (!marker.getTitle().equals("-1"))
 							break;
 						return true;
 					} while (this.NowZoom > 13.0F);
-					Log.i("点击图钉", this.NowZoom + "");
+					Log.i(TAG, " ----------2-------- " + this.NowZoom + "");
 					if ((this.NowZoom >= 10.0F) && (this.NowZoom <= 13.0F)) {
 						this.NowZoom += 14.0F - this.NowZoom;
+						Log.i(TAG, " ----------3-------- " + this.NowZoom + "");
+
+						String title = marker.getTitle();
+
+						Log.i(TAG, "marker title" + title);
+
+						Person person = myHasMap.get(title);
+						Log.i(TAG, person.toString());
+
 						MapUtils.moveToPosition(this.aMap,
 								Double.valueOf(marker.getPosition().latitude),
 								Double.valueOf(marker.getPosition().longitude),
@@ -324,6 +348,7 @@ public class MainActivity extends FragmentActivity implements
 					}
 					if ((this.NowZoom >= 7.0F) && (this.NowZoom < 10.0F)) {
 						this.NowZoom += 10.0F - this.NowZoom;
+						Log.i(TAG, " ----------4-------- " + this.NowZoom + "");
 						MapUtils.moveToPosition(this.aMap,
 								Double.valueOf(marker.getPosition().latitude),
 								Double.valueOf(marker.getPosition().longitude),
@@ -331,6 +356,7 @@ public class MainActivity extends FragmentActivity implements
 					}
 					if ((this.NowZoom >= 5.0F) && (this.NowZoom < 7.0F)) {
 						this.NowZoom += 7.0F - this.NowZoom;
+						Log.i(TAG, " ----------5-------- " + this.NowZoom + "");
 						MapUtils.moveToPosition(this.aMap,
 								Double.valueOf(marker.getPosition().latitude),
 								Double.valueOf(marker.getPosition().longitude),
@@ -338,26 +364,77 @@ public class MainActivity extends FragmentActivity implements
 					}
 					if (this.NowZoom < 5.0F) {
 						this.NowZoom += 5.0F - this.NowZoom;
+						Log.i(TAG, " ----------6-------- " + this.NowZoom + "");
 						MapUtils.moveToPosition(this.aMap,
 								Double.valueOf(marker.getPosition().latitude),
 								Double.valueOf(marker.getPosition().longitude),
 								this.NowZoom);
 					}
-					Log.i("点击图钉2", this.NowZoom + "");
+					// Log.i(TAG, " ----------7-------- " + this.NowZoom + "");
 				} while (this.mapList.size() <= 0);
-				i = Integer.parseInt(marker.getTitle());
+				i = Integer.parseInt(marker.getTitle().substring(6, 8));
 			} while (i < 0);
 			MapUtils.moveToPosition(this.aMap,
 					Double.valueOf(marker.getPosition().latitude),
 					Double.valueOf(marker.getPosition().longitude),
 					this.NowZoom);
+
+			localHashMap = (HashMap) this.mapList.get(i);
+
+			Log.i(TAG, "localHashMap:"
+					+ localHashMap.get("Marker" + i).toString());
+
 			return true;
-			// localHashMap = (HashMap)this.mapList.get(i);
 			// Log.i("点击图钉2", localHashMap.toString());
 		} while (localHashMap == null);
 		// OnShowView(getActivity(), localHashMap);
 
 		// return false;
+	}
+
+	/**
+	 * 方法必须重写
+	 */
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		mapView.onSaveInstanceState(outState);
+	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		mapView.onDestroy();
+		if (null != mlocationClient) {
+			mlocationClient.onDestroy();
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		mapView.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		mapView.onResume();
+	}
+
+	@Override
+	protected void onStart() {
+		// TODO Auto-generated method stub
+		super.onStart();
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
 	}
 
 }
