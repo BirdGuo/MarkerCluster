@@ -270,7 +270,7 @@ public class MainActivity extends FragmentActivity implements
 				double lat = amapLocation.getLatitude();
 				double lon = amapLocation.getLongitude();
 
-				Log.i(TAG, lat + "  " + lon);
+//				Log.i(TAG, lat + "  " + lon);
 
 				mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
 
@@ -318,6 +318,8 @@ public class MainActivity extends FragmentActivity implements
 	public boolean onMarkerClick(Marker marker) {
 		// TODO Auto-generated method stub
 
+		Log.i(TAG, "mapList size:"+mapList.size());
+		
 		HashMap localHashMap;
 		do {
 			int i;
@@ -370,10 +372,15 @@ public class MainActivity extends FragmentActivity implements
 								Double.valueOf(marker.getPosition().longitude),
 								this.NowZoom);
 					}
-					// Log.i(TAG, " ----------7-------- " + this.NowZoom + "");
+					Log.i(TAG, " ----------7-------- " + this.NowZoom + "  "
+							+ mapList.size());
 				} while (this.mapList.size() <= 0);
 				i = Integer.parseInt(marker.getTitle().substring(6, 8));
+				Log.i(TAG, " marker title i " + i);
 			} while (i < 0);
+			
+			Log.i(TAG, " --------------到这里吗------------- ");
+			
 			MapUtils.moveToPosition(this.aMap,
 					Double.valueOf(marker.getPosition().latitude),
 					Double.valueOf(marker.getPosition().longitude),
